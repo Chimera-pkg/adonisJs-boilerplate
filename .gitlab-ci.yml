@@ -1,0 +1,124 @@
+stages:
+  - build
+  - deploy
+
+# Config cache
+cache:
+  paths:
+    - node_modules/
+
+# Build job
+build_staging:
+  stage: build
+  tags:
+    - medmap-backend-staging
+  variables:
+    PROJECT_DIR: '/www/wwwroot/medmap-backend-staging'
+  script:
+    - sudo rm -rf $PROJECT_DIR
+    - sudo mkdir $PROJECT_DIR
+    - sudo chown -R gitlab-runner:gitlab-runner $PROJECT_DIR
+    - rsync -auvz . $PROJECT_DIR
+    - cd $PROJECT_DIR
+    - yarn install
+    - yarn run build
+    - cd build
+    - yarn install --production
+  only:
+    - develop
+
+# Deploy job
+deploy_staging:
+  stage: deploy
+  tags:
+    - medmap-backend-staging
+  variables:
+    PROJECT_DIR: '/www/wwwroot/medmap-backend-staging'
+    NODE_ENV: 'staging'
+    PORT: 3333
+    HOST: '0.0.0.0'
+    APP_KEY: 'fBrPI6oilkCX47VT0dXwy01m6dWKv8qS'
+    DRIVE_DISK: 'local'
+    SERVER_BASEURL: 'http://157.230.254.228:3333'
+    CLIENT_WEB_BASEURL: 'https://medmap.netlify.app'
+    DB_CONNECTION: 'mysql'
+    MYSQL_HOST: 'localhost'
+    MYSQL_PORT: 3306
+    MYSQL_USER: 'medmap-backend-staging'
+    MYSQL_PASSWORD: 'Jzya4R86tjS2^EN+'
+    MYSQL_DB_NAME: 'medmap_singapore'
+    GOOGLE_CLIENT_ID: '${GOOGLE_CLIENT_ID}'
+    GOOGLE_CLIENT_SECRET: '${GOOGLE_CLIENT_SECRET}'
+    SMTP_HOST: 'smtp.zoho.com'
+    SMTP_PORT: 465
+    SMTP_USERNAME: 'support@sahabatkebaikan.org'
+    SMTP_PASSWORD: 'Alhamdulillah2020%'
+    SES_ACCESS_KEY: '<aws-access-key>'
+    SES_ACCESS_SECRET: '<aws-secret>'
+    SES_REGION: 'us-east-1'
+    CACHE_VIEWS: 'false'
+
+  script:
+    - cd $PROJECT_DIR
+    - npm run prestart
+    - pm2 delete ecosystem.config.js --only medmap-backend-staging
+    - pm2 restart ecosystem.config.js --only medmap-backend-staging
+  only:
+    - develop
+
+build_production:
+  stage: build
+  tags:
+    - medmap
+  variables:
+    PROJECT_DIR: '/www/wwwroot/medmap-backend-production'
+  script:
+    - sudo rm -rf $PROJECT_DIR
+    - sudo mkdir $PROJECT_DIR
+    - sudo chown -R gitlab-runner:gitlab-runner $PROJECT_DIR
+    - rsync -auvz . $PROJECT_DIR
+    - cd $PROJECT_DIR
+    - yarn install
+    - yarn run build
+    - cd build
+    - yarn install --production
+  only:
+    - main
+
+deploy_production:
+  stage: deploy
+  tags:
+    - medmap
+  variables:
+    PROJECT_DIR: '/www/wwwroot/medmap-backend-production'
+    NODE_ENV: 'production'
+    PORT: 3333
+    HOST: '0.0.0.0'
+    APP_KEY: 'fiz6VhpnNxBwVXnxAJpusxlFl3XkMM6m'
+    DRIVE_DISK: 'local'
+    SERVER_BASEURL: 'https://api-medmap.mandatech-mataram.com'
+    CLIENT_WEB_BASEURL: 'https://medmap.netlify.app'
+    DB_CONNECTION: 'mysql'
+    MYSQL_HOST: 'localhost'
+    MYSQL_PORT: 3306
+    MYSQL_USER: 'medmap-backend'
+    MYSQL_PASSWORD: 'Jzya4R86tjS2^EN+'
+    MYSQL_DB_NAME: 'medmap_singapore'
+    GOOGLE_CLIENT_ID: '${GOOGLE_CLIENT_ID}'
+    GOOGLE_CLIENT_SECRET: '${GOOGLE_CLIENT_SECRET}'
+    SMTP_HOST: 'smtp.zoho.com'
+    SMTP_PORT: 465
+    SMTP_USERNAME: 'support@sahabatkebaikan.org'
+    SMTP_PASSWORD: 'Alhamdulillah2020%'
+    SES_ACCESS_KEY: '<aws-access-key>'
+    SES_ACCESS_SECRET: '<aws-secret>'
+    SES_REGION: 'us-east-1'
+    CACHE_VIEWS: 'false'
+
+  script:
+    - cd $PROJECT_DIR
+    - npm run prestart
+    - pm2 delete ecosystem.config.js --only medmap-backend-production
+    - pm2 restart ecosystem.config.js --only medmap-backend-production
+  only:
+    - main

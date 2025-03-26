@@ -1,0 +1,10 @@
+<h1> Welcome {{ data.username }} </h1>
+<p>
+  Please <a href="{{ data.url }}">Click here</a> to verify your MedMap account.
+</p>
+@if(data.password)
+  <p>Then login with this password: {{ data.password }} </p>
+@end
+<p>
+  This url only valid for 24 hours, after expired you can request again using this <a href="{{ data.resendUrl }}">LINK</a>.
+</p>

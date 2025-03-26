@@ -1,0 +1,52 @@
+{
+  "name": "medmap-singapore-backend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "node ace serve --watch",
+    "build": "node ace build --production",
+    "prestart": "npm run db:migrate && npm run db:seed",
+    "start": "node server.js",
+    "db:migrate": "node ace migration:run",
+    "db:migrate:undo": "node ace migration:rollback",
+    "db:seed": "node ace db:seed",
+    "lint": "eslint . --ext=.ts",
+    "format": "prettier --write .",
+    "make:model": "node ace make:model",
+    "make:validator": "node ace make:validator",
+    "make:controller": "node ace make:controller",
+    "make:policy": "node ace make:policy"
+  },
+  "devDependencies": {
+    "@adonisjs/assembler": "^5.0.0",
+    "adonis-preset-ts": "^2.1.0",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-adonis": "^1.3.3",
+    "eslint-plugin-prettier": "^4.0.0",
+    "pino-pretty": "^7.0.1",
+    "prettier": "^2.4.1",
+    "typescript": "~4.2",
+    "youch": "^2.2.2",
+    "youch-terminal": "^1.1.1"
+  },
+  "dependencies": {
+    "@adonisjs/ally": "^4.1.1",
+    "@adonisjs/auth": "^8.0.9",
+    "@adonisjs/bouncer": "^2.2.5",
+    "@adonisjs/core": "^5.3.0",
+    "@adonisjs/lucid": "^16.2.1",
+    "@adonisjs/lucid-slugify": "^2.1.3",
+    "@adonisjs/mail": "^7.2.4",
+    "@adonisjs/repl": "^3.1.0",
+    "@adonisjs/view": "^6.1.1",
+    "aws-sdk": "^2.1009.0",
+    "google-auth-library": "^7.10.1",
+    "luxon": "^2.0.2",
+    "mysql": "^2.18.1",
+    "phc-argon2": "^1.1.2",
+    "proxy-addr": "^2.0.7",
+    "reflect-metadata": "^0.1.13",
+    "source-map-support": "^0.5.20"
+  }
+}
