@@ -1,10 +1,8 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import Route from '@ioc:Adonis/Core/Route'
-import Drive from '@ioc:Adonis/Core/Drive'
 import Env from '@ioc:Adonis/Core/Env'
 import Logger from '@ioc:Adonis/Core/Logger'
 import User, { UserRole } from 'App/Models/User'
-import FileUpload from 'App/Models/FileUpload'
 import CreateUserValidator from 'App/Validators/User/CreateUserValidator'
 import UnprocessableEntityException from 'App/Exceptions/UnprocessableEntityException'
 import VerifyEmail from 'App/Mailers/VerifyEmail'
@@ -25,18 +23,6 @@ export default class UsersController {
       queryUsers.where('role', role)
     }
 
-    if (role === UserRole.manufacturer) {
-      queryUsers.preload('manufacturer', (manufacturer) => {
-        manufacturer.preload('logo')
-      })
-    }
-
-    if (role === UserRole.healthcare) {
-      queryUsers.preload('healthcare', (manufacturer) => {
-        manufacturer.preload('logo')
-      })
-    }
-
     const users = await queryUsers.paginate(page, limit)
 
     users.baseUrl('/users')
@@ -48,18 +34,6 @@ export default class UsersController {
     const user = await User.findOrFail(params.id)
 
     await bouncer.with('UserPolicy').authorize('view')
-
-    if (user.role === UserRole.manufacturer) {
-      await user.load('manufacturer', (manufacturer) => {
-        manufacturer.preload('logo')
-      })
-    }
-
-    if (user.role === UserRole.healthcare) {
-      await user.load('healthcare', (manufacturer) => {
-        manufacturer.preload('logo')
-      })
-    }
 
     return user
   }
@@ -85,72 +59,7 @@ export default class UsersController {
 
     await user.save()
 
-    const logo = request.file('logo')
-
-    if (user.role === UserRole.manufacturer) {
-      const manufacturer = await user.related('manufacturer').create({ name: data.name })
-
-      if (logo) {
-        const fileUpload = new FileUpload()
-
-        const subfolder = 'manufacturer-logo'
-
-        const serverBaseUrl = Env.get('SERVER_BASEURL')
-
-        await logo.moveToDisk(subfolder)
-
-        const path = await Drive.getUrl(`${subfolder}/${logo.fileName}`)
-
-        const url = serverBaseUrl + path
-
-        fileUpload.name = `${subfolder}/${logo.fileName}`
-        fileUpload.extname = logo.extname
-        fileUpload.type = logo.type
-        fileUpload.size = logo.size
-        fileUpload.path = path
-        fileUpload.url = url
-
-        await manufacturer.related('logo').associate(fileUpload)
-      }
-
-      await user.load('manufacturer', (manufacturer) => {
-        manufacturer.preload('logo')
-      })
-    }
-
-    if (user.role === UserRole.healthcare) {
-      const healthcare = await user.related('healthcare').create({ name: data.name })
-
-      if (logo) {
-        const fileUpload = new FileUpload()
-
-        const subfolder = 'healthcare-logo'
-
-        const serverBaseUrl = Env.get('SERVER_BASEURL')
-
-        await logo.moveToDisk(subfolder)
-
-        const path = await Drive.getUrl(`${subfolder}/${logo.fileName}`)
-
-        const url = serverBaseUrl + path
-
-        fileUpload.name = `${subfolder}/${logo.fileName}`
-        fileUpload.extname = logo.extname
-        fileUpload.type = logo.type
-        fileUpload.size = logo.size
-        fileUpload.path = path
-        fileUpload.url = url
-
-        await healthcare.related('logo').associate(fileUpload)
-      }
-
-      await user.load('healthcare', (healthcare) => {
-        healthcare.preload('logo')
-      })
-    }
-
     const verificationUrl = this.generateVerificationUrl(user.email)
-
     const resendVerificationUrl = this.generateResendVerificationUrl(user.email)
 
     const verifyEmail = new VerifyEmail(
@@ -223,204 +132,17 @@ export default class UsersController {
 
     await user.save()
 
-    const logo = request.file('logo', {
-      size: '1mb',
-      extnames: ['jpg', 'jpeg', 'png', 'webp'],
-    })
-
-    if (user.role === UserRole.manufacturer) {
-      let manufacturer = await user.related('manufacturer').query().first()
-
-      if (manufacturer) {
-        if (logo) {
-          if (logo.errors.length) {
-            throw new UnprocessableEntityException('logo validation failed', logo.errors)
-          }
-
-          const subfolder = 'manufacturer-logo'
-
-          const serverBaseUrl = Env.get('SERVER_BASEURL')
-
-          await logo.moveToDisk(subfolder)
-
-          const path = await Drive.getUrl(`${subfolder}/${logo.fileName}`)
-
-          const url = serverBaseUrl + path
-
-          const fileUpload = await FileUpload.find(manufacturer.logoId)
-
-          if (!fileUpload) {
-            const fileUpload = await FileUpload.create({
-              name: `${subfolder}/${logo.fileName}`,
-              extname: logo.extname,
-              type: logo.type,
-              size: logo.size,
-              path,
-              url,
-            })
-
-            manufacturer.logoId = fileUpload.id
-          } else {
-            await Drive.delete(fileUpload.name)
-
-            fileUpload.name = `${subfolder}/${logo.fileName}`
-            fileUpload.extname = logo.extname
-            fileUpload.type = logo.type
-            fileUpload.size = logo.size
-            fileUpload.path = path
-            fileUpload.url = url
-
-            await fileUpload.save()
-          }
-        }
-
-        manufacturer.name = data.name
-        await manufacturer.save()
-      } else {
-        manufacturer = await user.related('manufacturer').create({ name: data.name })
-
-        if (logo) {
-          const fileUpload = new FileUpload()
-
-          const subfolder = 'manufacturer-logo'
-
-          const serverBaseUrl = Env.get('SERVER_BASEURL')
-
-          await logo.moveToDisk(subfolder)
-
-          const path = await Drive.getUrl(`${subfolder}/${logo.fileName}`)
-
-          const url = serverBaseUrl + path
-
-          fileUpload.name = `${subfolder}/${logo.fileName}`
-          fileUpload.extname = logo.extname
-          fileUpload.type = logo.type
-          fileUpload.size = logo.size
-          fileUpload.path = path
-          fileUpload.url = url
-
-          await manufacturer.related('logo').associate(fileUpload)
-        }
-      }
-    }
-
-    if (user.role === UserRole.healthcare) {
-      let healthcare = await user.related('healthcare').query().first()
-
-      if (healthcare) {
-        if (logo) {
-          if (logo.errors.length) {
-            throw new UnprocessableEntityException('logo validation failed', logo.errors)
-          }
-
-          const subfolder = 'healthcare-logo'
-
-          const serverBaseUrl = Env.get('SERVER_BASEURL')
-
-          await logo.moveToDisk(subfolder)
-
-          const path = await Drive.getUrl(`${subfolder}/${logo.fileName}`)
-
-          const url = serverBaseUrl + path
-
-          const fileUpload = await FileUpload.find(healthcare.logoId)
-
-          if (!fileUpload) {
-            const fileUpload = await FileUpload.create({
-              name: `${subfolder}/${logo.fileName}`,
-              extname: logo.extname,
-              type: logo.type,
-              size: logo.size,
-              path,
-              url,
-            })
-
-            healthcare.logoId = fileUpload.id
-          } else {
-            await Drive.delete(fileUpload.name)
-
-            fileUpload.name = `${subfolder}/${logo.fileName}`
-            fileUpload.extname = logo.extname
-            fileUpload.type = logo.type
-            fileUpload.size = logo.size
-            fileUpload.path = path
-            fileUpload.url = url
-
-            await fileUpload.save()
-          }
-        }
-
-        healthcare.name = data.name
-        await healthcare.save()
-      } else {
-        healthcare = await user.related('healthcare').create({ name: data.name })
-
-        if (logo) {
-          const fileUpload = new FileUpload()
-
-          const subfolder = 'healthcare-logo'
-
-          const serverBaseUrl = Env.get('SERVER_BASEURL')
-
-          await logo.moveToDisk(subfolder)
-
-          const path = await Drive.getUrl(`${subfolder}/${logo.fileName}`)
-
-          const url = serverBaseUrl + path
-
-          fileUpload.name = `${subfolder}/${logo.fileName}`
-          fileUpload.extname = logo.extname
-          fileUpload.type = logo.type
-          fileUpload.size = logo.size
-          fileUpload.path = path
-          fileUpload.url = url
-
-          await healthcare.related('logo').associate(fileUpload)
-        }
-      }
-    }
-
-    await user.load('manufacturer', (manufacturer) => {
-      manufacturer.preload('logo')
-    })
-
-    await user.load('healthcare', (healthcare) => {
-      healthcare.preload('logo')
-    })
-
     return user
   }
 
   public async destroy({ params }: HttpContextContract) {
-    const user = await User.query()
-      .where('id', params.id)
-      .preload('manufacturer', (manufacturer) => {
-        manufacturer.preload('logo')
-      })
-      .preload('healthcare', (healthcare) => {
-        healthcare.preload('logo')
-      })
-      .first()
+    const user = await User.find(params.id)
 
     if (!user) {
       throw new NotFoundException('user is not found')
     }
 
     await user.delete()
-
-    if (user.role === UserRole.manufacturer) {
-      if (user.manufacturer.logo) {
-        await user.manufacturer.logo.delete()
-        await Drive.delete(user.manufacturer.logo.name)
-      }
-    }
-
-    if (user.role === UserRole.healthcare) {
-      if (user.healthcare.logo) {
-        await user.healthcare.logo.delete()
-        await Drive.delete(user.healthcare.logo.name)
-      }
-    }
 
     return {
       message: `SUCCESS: user deleted`,

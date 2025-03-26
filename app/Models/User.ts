@@ -4,8 +4,6 @@ import { column, beforeSave, BaseModel, hasOne, HasOne } from '@ioc:Adonis/Lucid
 
 export enum UserRole {
   admin = 'admin',
-  manufacturer = 'manufacturer',
-  healthcare = 'healthcare',
 }
 export default class User extends BaseModel {
   @column({ isPrimary: true })
