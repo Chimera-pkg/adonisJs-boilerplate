@@ -1,8 +1,6 @@
 import { DateTime } from 'luxon'
 import Hash from '@ioc:Adonis/Core/Hash'
 import { column, beforeSave, BaseModel, hasOne, HasOne } from '@ioc:Adonis/Lucid/Orm'
-import Manufacturer from './Manufacturer'
-import Healthcare from './Healthcare'
 
 export enum UserRole {
   admin = 'admin',
@@ -35,11 +33,6 @@ export default class User extends BaseModel {
   @column()
   public role: UserRole
 
-  @hasOne(() => Manufacturer)
-  public manufacturer: HasOne<typeof Manufacturer>
-
-  @hasOne(() => Healthcare)
-  public healthcare: HasOne<typeof Healthcare>
 
   @column.dateTime({ autoCreate: true })
   public createdAt: DateTime
@@ -54,7 +47,5 @@ export default class User extends BaseModel {
     }
   }
 
-  public isManufacturer = () => this.role === UserRole.manufacturer
-  public isHealthcare = () => this.role === UserRole.healthcare
   public isAdmin = () => this.role === UserRole.admin
 }
