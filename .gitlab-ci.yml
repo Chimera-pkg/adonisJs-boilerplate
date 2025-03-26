@@ -48,10 +48,6 @@ deploy_staging:
     MYSQL_DB_NAME: 'medmap_singapore'
     GOOGLE_CLIENT_ID: '${GOOGLE_CLIENT_ID}'
     GOOGLE_CLIENT_SECRET: '${GOOGLE_CLIENT_SECRET}'
-    SMTP_HOST: 'smtp.zoho.com'
-    SMTP_PORT: 465
-    SMTP_USERNAME: 'support@sahabatkebaikan.org'
-    SMTP_PASSWORD: 'Alhamdulillah2020%'
     SES_ACCESS_KEY: '<aws-access-key>'
     SES_ACCESS_SECRET: '<aws-secret>'
     SES_REGION: 'us-east-1'
