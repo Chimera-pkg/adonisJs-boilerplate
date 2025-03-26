@@ -1,18 +1,27 @@
 import { DateTime } from 'luxon'
 import { BaseModel, column } from '@ioc:Adonis/Lucid/Orm'
 
-export default class Country extends BaseModel {
+export default class LabTest extends BaseModel {
   @column({ isPrimary: true })
   public id: number
 
   @column()
-  public name: string
+  public patientName: string
 
   @column()
-  public iso: string
+  public testCaseId: string
 
   @column()
-  public phoneCode: string
+  public physicianName: string
+
+  @column()
+  public disease: string
+
+  @column()
+  public specimenType: string
+
+  @column()
+  public reportStatus: string
 
   @column.dateTime({ autoCreate: true })
   public createdAt: DateTime
